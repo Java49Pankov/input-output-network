@@ -3,6 +3,8 @@ package telran.io;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -21,14 +23,22 @@ class InputOutputTest {
 	}
 
 	@Test
-	void displayDirContentTest() {
-		// TODO
-		displayDirContent(Path.of("../.."), 3);
+	void displayDirContentTest() throws IOException {
+		displayDirContent(Path.of(".."), 3);
 	}
 
-	private void displayDirContent(Path dirPath, int maxDepth) {
-		// TODO Auto-generated method stub
-		// Display content directory by using method walk of the class Files
+	private void displayDirContent(Path dirPath, int maxDepth) throws IOException {
+		Path pathDir = dirPath;
+		if (!Files.isDirectory(pathDir)) {
+			throw new IllegalArgumentException("no directory path");
+		}
+		pathDir = pathDir.toAbsolutePath().normalize();
+		int pathLevel = pathDir.getNameCount();
+		Files.walk(pathDir, maxDepth)
+		.filter(Files::isReadable)
+		.forEach(dir -> {
+			System.out.printf("%s<%s> - %s\n", " ".repeat((dir.getNameCount() - pathLevel) * 4), dir.getFileName(),
+					Files.isDirectory(dir) ? "dir" : "files");
+		});
 	}
-
 }

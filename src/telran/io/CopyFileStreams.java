@@ -3,7 +3,7 @@ package telran.io;
 import java.io.*;
 
 public class CopyFileStreams implements CopyFile {
-	private int bufferLength;
+	private final int bufferLength;
 
 	public CopyFileStreams(int bufferLength) {
 		super();
@@ -12,19 +12,17 @@ public class CopyFileStreams implements CopyFile {
 
 	@Override
 	public void copy(String pathToSource, String pathToDestination) {
-		try (InputStream input = new FileInputStream(pathToSource);
-				OutputStream output = new FileOutputStream(pathToDestination)) {
-			byte[] buf = new byte[bufferLength];
-			
-			int inputLength = input.read(buf);
-			
-			while (inputLength > 0) {
-				output.write(buf, 0, inputLength);
-				inputLength = input.read(buf);
+		try (FileInputStream input = new FileInputStream(pathToSource);
+				FileOutputStream output = new FileOutputStream(pathToDestination)) {
+			int length = 0;
+			byte[] buffer = new byte[bufferLength];
+			while ((length = input.read(buffer)) > 0) {
+				output.write(buffer, 0, length);
 			}
-		} catch (Exception e) {
-			System.out.println(e.getMessage());
+		} catch (IOException e) {
+			throw new RuntimeException(e.toString());
 		}
+
 	}
 
 }

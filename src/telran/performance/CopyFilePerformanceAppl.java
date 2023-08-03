@@ -1,47 +1,35 @@
 package telran.performance;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.Arrays;
 
 import telran.io.CopyFileStreams;
+import telran.io.CopyFileTransfer;
 
 public class CopyFilePerformanceAppl {
-	private static final int N_RUNS = 1;
+	static final String pathoToSource = "bigFile";
+	static final String pathoToDestination = "bigFileCopy";
 
 	public static void main(String[] args) {
-		String sourceFilePath = "bigFile";
-		String destinationFilePath = "bigFileCopy";
-
-		int[] bufferLengths = { 10_000, 100_000, 1_000_000, 100_000_000 };
-
-		long fileSize = getSize(sourceFilePath);
-
-		for (int bufferLength : bufferLengths) {
-			runPerformanceTest(sourceFilePath, destinationFilePath, bufferLength, fileSize);
-		}
-	}
-
-	private static long getSize(String filePath) {
-		long res = -1;
+		Integer[] bufferLengthValues = { 1_000_000 };
 		try {
-			Path path = Paths.get(filePath);
-			res = Files.size(path);
-		} catch (IOException e) {
+			long size = Files.size(Path.of(pathoToSource));
+			Arrays.stream(bufferLengthValues).map(bl -> getPerformanceTest(bl, size)).forEach(t -> t.run());
+			PerformanceTest testTransfer = new CopyPerformanceTest(
+					String.format("%s ; size: %d", "CopyFileTransfer", size), 1, pathoToSource, pathoToDestination,
+					new CopyFileTransfer());
+			testTransfer.run();
+		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
-		return res;
 	}
 
-	private static void runPerformanceTest(String srcFilePath, String destFilePath, int bufferLength,
-			long fileSize) {
-		CopyFileStreams cfs = new CopyFileStreams(bufferLength);
-		CopyPerformanceTest performanceTest = new CopyPerformanceTest("CopyTest", N_RUNS, srcFilePath,
-				destFilePath, cfs);
-		System.out.printf("File size: %d bytes, Buffer length: %d bytes\n", fileSize, bufferLength);
-		performanceTest.run();
-		System.out.println();
+	private static CopyPerformanceTest getPerformanceTest(Integer bl, long size) {
+		CopyPerformanceTest test = new CopyPerformanceTest(
+				String.format("%s implementation buffer length %d; size:%d", "CopyFileStreams", bl, size), 1,
+				pathoToSource, pathoToDestination, new CopyFileStreams(bl));
+		return test;
 	}
 
 }

@@ -1,9 +1,11 @@
 package telran.employees.service;
 
-import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import telran.employees.dto.*;
+
+import java.io.*;
 
 import java.util.*;
 
@@ -34,27 +36,45 @@ public class CompanyImpl implements Company {
 	public List<DepartmentSalary> getDepartmentSalaryDistribution() {
 		return employees.values().stream()
 				.collect(Collectors.groupingBy(Employee::department, Collectors.averagingInt(Employee::salary)))
-				.entrySet().stream()
-				.map(e -> new DepartmentSalary(e.getKey(), e.getValue()))
-				.toList();
+				.entrySet().stream().map(e -> new DepartmentSalary(e.getKey(), e.getValue())).toList();
 	}
 
 	@Override
 	public List<SalaryDistribution> getSalaryDistribution(int interval) {
-		// TODO Auto-generated method stub
-		return null;
+		List<SalaryDistribution> list = new ArrayList<>();
+		int minSalary = employees.values().stream().map(e -> e.salary()).min(Comparator.naturalOrder()).get();
+		int maxSalary = employees.values().stream().map(e -> e.salary()).max(Comparator.naturalOrder()).get();
+
+		int startSalary = (minSalary / interval) * interval;
+		IntStream.iterate(startSalary, i -> i + interval).limit((maxSalary - startSalary) / interval + 1).forEach(i -> {
+			long counter = employees.values().stream().filter(e -> e.salary() >= i && e.salary() < i + interval)
+					.count();
+
+			list.add(new SalaryDistribution(i, Math.min(i + interval - 1, maxSalary), (int) counter));
+		});
+		System.out.println(list);
+		return list;
+
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void restore(String filePath) {
-		// TODO Auto-generated method stub
+		try (ObjectInputStream input = new ObjectInputStream(new FileInputStream(filePath))) {
+			employees = (LinkedHashMap<Long, Employee>) input.readObject();
+		} catch (IOException | ClassNotFoundException e) {
+			throw new RuntimeException(e.toString());
+		}
 
 	}
 
 	@Override
 	public void save(String filePath) {
-		// TODO Auto-generated method stub
-
+		try (ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(filePath))) {
+			output.writeObject(employees);
+		} catch (IOException e) {
+			throw new RuntimeException(e.toString());
+		}
 	}
 
 }

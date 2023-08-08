@@ -1,6 +1,7 @@
 package telran.employees.test;
 
 import static org.junit.jupiter.api.Assertions.*;
+import java.util.*;
 
 import java.time.LocalDate;
 
@@ -17,7 +18,7 @@ import telran.employees.dto.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 
 class CompanyTest {
-	private static final long ID_NOT_EXIST = 1000000;
+	private static final long ID_NOT_EXIST = 1_000_000;
 	private static final long ID1 = 123;
 	private static final long ID2 = 124;
 	private static final long ID3 = 125;
@@ -81,12 +82,22 @@ class CompanyTest {
 
 	@Test
 	void testGetDepartmentSalaryDistribution() {
-		// TODO
+		Employee[] expected = { empl1, empl3 };
+		Set<Employee> expectedEmployee = new LinkedHashSet<>(Arrays.asList(expected));
+
+		List<DepartmentSalary> actualDistribution = company.getDepartmentSalaryDistribution();
+
+		for (Employee empl : expectedEmployee) {
+			DepartmentSalary expectedSalary = new DepartmentSalary(empl.department(), empl.salary());
+			assertTrue(actualDistribution.contains(expectedSalary));
+		}
+
 	}
 
 	@Test
 	void testGetSalaryDistribution() {
-		// TODO
+		company.getSalaryDistribution(2000);
+		  //TODO
 	}
 
 	@Test

@@ -1,6 +1,14 @@
 package telran.employees.service;
 
 import telran.employees.dto.*;
+
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 public interface Company {
@@ -16,9 +24,24 @@ public interface Company {
 
 	List<SalaryDistribution> getSalaryDistribution(int interval); // returns salary values distribution
 
-	void restore(String filePath);
+	default public void restore(String filePath) {
+		if (Files.exists(Path.of(filePath))) {
+			try (ObjectInputStream input = new ObjectInputStream(new FileInputStream(filePath))) {
+				@SuppressWarnings("unchecked")
+				List<Employee> employeesRestore = (List<Employee>) input.readObject();
+				employeesRestore.forEach(this::addEmployee);
+			} catch (Exception e) {
+				throw new RuntimeException(e.toString());
+			}
+		}
+	}
 
-	void save(String filePath);
+	default public void save(String filePath) {
+		try (ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(filePath))) {
+			output.writeObject(getEmployees());
+		} catch (IOException e) {
+			throw new RuntimeException(e.toString());
+		}
+	}
 
 }
- 

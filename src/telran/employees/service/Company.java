@@ -2,11 +2,8 @@ package telran.employees.service;
 
 import telran.employees.dto.*;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -18,11 +15,21 @@ public interface Company {
 
 	Employee getEmployee(long id);
 
+	Employee updateSalary(long id, int newSalary);
+
+	Employee updateDepartment(long id, String newDepartment);
+
 	List<Employee> getEmployees();
 
 	List<DepartmentSalary> getDepartmentSalaryDistribution(); // returns list of all departments with average salary
 
 	List<SalaryDistribution> getSalaryDistribution(int interval); // returns salary values distribution
+
+	List<Employee> getEmployeesByDepartment(String department);
+
+	List<Employee> getEmployeesBySalary(int salaryFrom, int salaryTo);
+
+	List<Employee> getEmployeesByAge(int ageFrom, int ageTo);
 
 	default public void restore(String filePath) {
 		if (Files.exists(Path.of(filePath))) {

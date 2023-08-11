@@ -4,12 +4,14 @@ import java.util.stream.*;
 
 import telran.employees.dto.*;
 
+import java.time.LocalDate;
 import java.util.*;
 
 public class CompanyImpl implements Company {
 	LinkedHashMap<Long, Employee> employees = new LinkedHashMap<>();
 	TreeMap<Integer, Collection<Employee>> employeesSalary = new TreeMap<>();
 	HashMap<String, Collection<Employee>> employeesDepartment = new HashMap<>();
+	TreeMap<Integer, Collection<Employee>> employeesAge = new TreeMap<>();
 
 	@Override
 	public boolean addEmployee(Employee empl) {
@@ -24,9 +26,11 @@ public class CompanyImpl implements Company {
 
 	private void addEmployeeSalary(Employee empl) {
 		int salary = empl.salary();
+		String department = empl.department();
+		int birthYear = empl.birthDate().getYear();
 		employeesSalary.computeIfAbsent(salary, k -> new HashSet<>()).add(empl);
-		employeesDepartment.computeIfAbsent(empl.department(), k -> new HashSet<>()).add(empl);
-
+		employeesDepartment.computeIfAbsent(department, k -> new HashSet<>()).add(empl);
+		employeesAge.computeIfAbsent(birthYear, k -> new HashSet<>()).add(empl);
 	}
 
 	@Override
@@ -35,8 +39,19 @@ public class CompanyImpl implements Company {
 		if (res != null) {
 			removeEmployeeSalary(res);
 			removeEmployeeDepartment(res);
+			rempoveEmployeeAge(res);
 		}
 		return res;
+	}
+
+	private void rempoveEmployeeAge(Employee empl) {
+		int age = empl.birthDate().getYear();
+		Collection<Employee> emplCollection = employeesAge.get(age);
+		emplCollection.remove(empl);
+		if (emplCollection.isEmpty()) {
+			employeesAge.remove(age);
+		}
+
 	}
 
 	private void removeEmployeeDepartment(Employee empl) {
@@ -124,8 +139,8 @@ public class CompanyImpl implements Company {
 
 	@Override
 	public List<Employee> getEmployeesByAge(int ageFrom, int ageTo) {
-		// TODO Auto-generated method stub
-		return null;
+		return employeesAge.subMap(ageFrom, true, ageTo, true).values().stream()
+				.flatMap(col -> col.stream().sorted((empl1, empl2) -> Long.compare(empl1.id(), empl2.id()))).toList();
 	}
 
 }

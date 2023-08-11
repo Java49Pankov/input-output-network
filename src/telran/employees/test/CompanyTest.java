@@ -109,6 +109,14 @@ class CompanyTest {
 		company.removeEmployee(ID4);
 		assertTrue(company.getEmployeesBySalary(0, 13000).isEmpty());
 	}
+	
+	@Test
+	void getEmployeeByAge() {
+		Employee[] expected = { empl1, empl2, empl3, empl4 };
+		Employee[] actual = company.getEmployeesByAge(1985, 2001).stream()
+				.sorted(Comparator.comparingLong(Employee::id)).toArray(Employee[]::new);
+		assertArrayEquals(expected, actual);
+	}
 
 	@Test
 	void getEmployeesByDepartment() {

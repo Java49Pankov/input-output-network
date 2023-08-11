@@ -4,7 +4,6 @@ import java.util.stream.*;
 
 import telran.employees.dto.*;
 
-import java.time.LocalDate;
 import java.util.*;
 
 public class CompanyImpl implements Company {
@@ -94,11 +93,8 @@ public class CompanyImpl implements Company {
 		Employee employee = employees.get(id);
 		Employee updateEmpl = null;
 		if (employee != null) {
-			updateEmpl = new Employee(employee.id(), employee.name(), employee.department(), newSalary,
-					employee.birthDate());
-			employees.put(id, updateEmpl);
-			removeEmployeeData(employee, employeesSalary, employee.salary());
-			addEmployeeData(updateEmpl);
+			updateEmpl = updateEmployeeData(employee, employee.department(), newSalary, employeesSalary,
+					employee.salary());
 		}
 		return updateEmpl;
 	}
@@ -108,12 +104,18 @@ public class CompanyImpl implements Company {
 		Employee empl = employees.get(id);
 		Employee updateEmpl = null;
 		if (empl != null) {
-			updateEmpl = new Employee(empl.id(), empl.name(), newDepartment, empl.salary(), empl.birthDate());
-			employees.put(id, updateEmpl);
-			removeEmployeeData(empl, employeesDepartment, empl.department());
-			addEmployeeData(updateEmpl);
+			updateEmpl = updateEmployeeData(empl, newDepartment, empl.salary(), employeesDepartment, empl.department());
 		}
 		return updateEmpl;
+	}
+
+	private <T> Employee updateEmployeeData(Employee empl, String newDepartment, int newSalary,
+			Map<T, Collection<Employee>> collection, T key) {
+		Employee updatedEmployee = new Employee(empl.id(), empl.name(), newDepartment, newSalary, empl.birthDate());
+		employees.put(empl.id(), updatedEmployee);
+		removeEmployeeData(empl, collection, key);
+		addEmployeeData(updatedEmployee);
+		return updatedEmployee;
 	}
 
 	@Override

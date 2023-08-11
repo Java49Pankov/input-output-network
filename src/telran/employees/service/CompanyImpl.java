@@ -9,6 +9,7 @@ import java.util.*;
 public class CompanyImpl implements Company {
 	LinkedHashMap<Long, Employee> employees = new LinkedHashMap<>();
 	TreeMap<Integer, Collection<Employee>> employeesSalary = new TreeMap<>();
+	HashMap<String, Collection<Employee>> employeesDepartment = new HashMap<>();
 
 	@Override
 	public boolean addEmployee(Employee empl) {
@@ -23,7 +24,9 @@ public class CompanyImpl implements Company {
 
 	private void addEmployeeSalary(Employee empl) {
 		int salary = empl.salary();
-		employeesSalary.computeIfAbsent(salary, k -> new HashSet<>());
+		employeesSalary.computeIfAbsent(salary, k -> new HashSet<>()).add(empl);
+		employeesDepartment.computeIfAbsent(empl.department(), k -> new HashSet<>()).add(empl);
+
 	}
 
 	@Override
@@ -31,8 +34,19 @@ public class CompanyImpl implements Company {
 		Employee res = employees.remove(id);
 		if (res != null) {
 			removeEmployeeSalary(res);
+			removeEmployeeDepartment(res);
 		}
 		return res;
+	}
+
+	private void removeEmployeeDepartment(Employee empl) {
+		String department = empl.department();
+		Collection<Employee> emplCollection = employeesDepartment.get(department);
+		emplCollection.remove(empl);
+		if (emplCollection.isEmpty()) {
+			employeesDepartment.remove(department);
+		}
+
 	}
 
 	private void removeEmployeeSalary(Employee empl) {
@@ -64,8 +78,7 @@ public class CompanyImpl implements Company {
 	@Override
 	public List<SalaryDistribution> getSalaryDistribution(int interval) {
 		return employees.values().stream()
-				.collect(Collectors.groupingBy(e -> e.salary() / interval, Collectors.counting()))
-				.entrySet().stream()
+				.collect(Collectors.groupingBy(e -> e.salary() / interval, Collectors.counting())).entrySet().stream()
 				.map(e -> new SalaryDistribution(e.getKey() * interval, e.getKey() * interval + interval - 1,
 						e.getValue().intValue()))
 				.sorted((sd1, sd2) -> Integer.compare(sd1.minSalary(), sd2.minSalary())).toList();
@@ -73,31 +86,40 @@ public class CompanyImpl implements Company {
 
 	@Override
 	public List<Employee> getEmployeesByDepartment(String department) {
-		// TODO Auto-generated method stub
-		return null;
+		return new ArrayList<>(employeesDepartment.getOrDefault(department, Collections.emptyList()));
 	}
 
 	@Override
 	public List<Employee> getEmployeesBySalary(int salaryFrom, int salaryTo) {
-		return employeesSalary
-				.subMap(salaryFrom, true, salaryTo, true)
-				.values()
-				.stream()
-				.flatMap(col -> col.stream()
-						.sorted((empl1, empl2) -> Long.compare(empl1.id(), empl2.id())))
-				.toList();
+		return employeesSalary.subMap(salaryFrom, true, salaryTo, true).values().stream()
+				.flatMap(col -> col.stream().sorted((empl1, empl2) -> Long.compare(empl1.id(), empl2.id()))).toList();
 	}
 
 	@Override
 	public Employee updateSalary(long id, int newSalary) {
-		// TODO Auto-generated method stub
-		return null;
+		Employee employee = employees.get(id);
+		Employee updateEmpl = null;
+		if (employee != null) {
+			updateEmpl = new Employee(employee.id(), employee.name(), employee.department(), newSalary,
+					employee.birthDate());
+			employees.put(id, updateEmpl);
+			removeEmployeeSalary(employee);
+			addEmployeeSalary(updateEmpl);
+		}
+		return updateEmpl;
 	}
 
 	@Override
 	public Employee updateDepartment(long id, String newDepartment) {
-		// TODO Auto-generated method stub
-		return null;
+		Employee empl = employees.get(id);
+		Employee updateEmpl = null;
+		if (empl != null) {
+			updateEmpl = new Employee(empl.id(), empl.name(), newDepartment, empl.salary(), empl.birthDate());
+			employees.put(id, updateEmpl);
+			removeEmployeeDepartment(empl);
+			addEmployeeSalary(updateEmpl);
+		}
+		return updateEmpl;
 	}
 
 	@Override

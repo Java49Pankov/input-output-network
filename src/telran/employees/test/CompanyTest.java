@@ -3,6 +3,8 @@ package telran.employees.test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.Comparator;
 
 import org.junit.jupiter.api.*;
 
@@ -14,6 +16,7 @@ import telran.employees.dto.*;
 
 class CompanyTest {
 	private static final long ID_NOT_EXIST = 10000000;
+	private static final String UPDATE_DEP = "newDep";
 	private static final String DEP1 = "dep1";
 	private static final String DEP2 = "dep2";
 	private static final String DEP3 = "dep3";
@@ -78,8 +81,7 @@ class CompanyTest {
 		DepartmentSalary[] expected = { new DepartmentSalary(DEP2, SALARY2), new DepartmentSalary(DEP1, SALARY1),
 				new DepartmentSalary(DEP3, SALARY3) };
 		DepartmentSalary[] actual = company.getDepartmentSalaryDistribution().stream()
-				.sorted((ds1, ds2) -> Double.compare(ds1.salary(), ds2.salary()))
-				.toArray(DepartmentSalary[]::new);
+				.sorted((ds1, ds2) -> Double.compare(ds1.salary(), ds2.salary())).toArray(DepartmentSalary[]::new);
 		assertArrayEquals(expected, actual);
 	}
 
@@ -92,6 +94,49 @@ class CompanyTest {
 		company.addEmployee(new Employee(ID_NOT_EXIST, DEP2, DEP2, 13000, DATE1));
 		SalaryDistribution[] actual = company.getSalaryDistribution(interval).toArray(SalaryDistribution[]::new);
 		assertArrayEquals(expected, actual);
+	}
+
+	@Test
+	void getEmployeesBySalary() {
+		Employee[] expected = { empl2, empl3, empl4 };
+		company.updateSalary(ID1, 14000);
+
+		Employee[] actual = company.getEmployeesBySalary(4000, 12000).stream()
+				.sorted(Comparator.comparingLong(Employee::id)).toArray(Employee[]::new);
+		assertArrayEquals(expected, actual);
+		company.removeEmployee(ID2);
+		company.removeEmployee(ID3);
+		company.removeEmployee(ID4);
+		assertTrue(company.getEmployeesBySalary(0, 13000).isEmpty());
+	}
+
+	@Test
+	void getEmployeesByDepartment() {
+		Employee[] expected = { empl1, empl3 };
+		Employee[] actual = company.getEmployeesByDepartment(DEP1).stream()
+				.sorted(Comparator.comparingLong(Employee::id)).toArray(Employee[]::new);
+		assertArrayEquals(expected, actual);
+		company.removeEmployee(ID1);
+		company.removeEmployee(ID3);
+		assertTrue(company.getEmployeesByDepartment(DEP1).isEmpty());
+	}
+
+	@Test
+	void updateSalary() {
+		company.updateSalary(ID1, 7000);
+		assertEquals(7000, company.getEmployee(ID1).salary());
+		company.updateSalary(ID5, 20000);
+		assertEquals(20000, company.getEmployee(ID5).salary());
+		assertNull(company.updateSalary(ID_NOT_EXIST, 1000));
+	}
+
+	@Test
+	void updateDepartment() {
+		company.updateDepartment(ID2, UPDATE_DEP);
+		assertEquals("newDep", company.getEmployee(ID2).department());
+		company.updateDepartment(ID5, DEP1);
+		assertEquals("dep1", company.getEmployee(ID5).department());
+		assertNull(company.updateDepartment(ID_NOT_EXIST, UPDATE_DEP));
 	}
 
 	@Test

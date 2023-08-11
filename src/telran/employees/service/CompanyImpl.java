@@ -18,58 +18,37 @@ public class CompanyImpl implements Company {
 		boolean res = false;
 		Employee emplRes = employees.putIfAbsent(empl.id(), empl);
 		if (emplRes == null) {
-			addEmployeeSalary(empl);
+			addEmployeeData(empl);
 			res = true;
 		}
 		return res;
 	}
 
-	private void addEmployeeSalary(Employee empl) {
+	private void addEmployeeData(Employee empl) {
 		int salary = empl.salary();
 		String department = empl.department();
-		int birthYear = empl.birthDate().getYear();
+		int birthDate = empl.birthDate().getYear();
 		employeesSalary.computeIfAbsent(salary, k -> new HashSet<>()).add(empl);
 		employeesDepartment.computeIfAbsent(department, k -> new HashSet<>()).add(empl);
-		employeesAge.computeIfAbsent(birthYear, k -> new HashSet<>()).add(empl);
+		employeesAge.computeIfAbsent(birthDate, k -> new HashSet<>()).add(empl);
 	}
 
 	@Override
 	public Employee removeEmployee(long id) {
 		Employee res = employees.remove(id);
 		if (res != null) {
-			removeEmployeeSalary(res);
-			removeEmployeeDepartment(res);
-			rempoveEmployeeAge(res);
+			removeEmployeeData(res, employeesSalary, res.salary());
+			removeEmployeeData(res, employeesDepartment, res.department());
+			removeEmployeeData(res, employeesAge, res.birthDate().getYear());
 		}
 		return res;
 	}
 
-	private void rempoveEmployeeAge(Employee empl) {
-		int age = empl.birthDate().getYear();
-		Collection<Employee> emplCollection = employeesAge.get(age);
-		emplCollection.remove(empl);
-		if (emplCollection.isEmpty()) {
-			employeesAge.remove(age);
-		}
-
-	}
-
-	private void removeEmployeeDepartment(Employee empl) {
-		String department = empl.department();
-		Collection<Employee> emplCollection = employeesDepartment.get(department);
-		emplCollection.remove(empl);
-		if (emplCollection.isEmpty()) {
-			employeesDepartment.remove(department);
-		}
-
-	}
-
-	private void removeEmployeeSalary(Employee empl) {
-		int salary = empl.salary();
-		Collection<Employee> employeesCollection = employeesSalary.get(salary);
-		employeesCollection.remove(empl);
-		if (employeesCollection.isEmpty()) {
-			employeesSalary.remove(salary);
+	private <T> void removeEmployeeData(Employee empl, Map<T, Collection<Employee>> collection, T key) {
+		Collection<Employee> col = collection.get(key);
+		col.remove(empl);
+		if (col.isEmpty()) {
+			collection.remove(key);
 		}
 	}
 
@@ -118,8 +97,8 @@ public class CompanyImpl implements Company {
 			updateEmpl = new Employee(employee.id(), employee.name(), employee.department(), newSalary,
 					employee.birthDate());
 			employees.put(id, updateEmpl);
-			removeEmployeeSalary(employee);
-			addEmployeeSalary(updateEmpl);
+			removeEmployeeData(employee, employeesSalary, employee.salary());
+			addEmployeeData(updateEmpl);
 		}
 		return updateEmpl;
 	}
@@ -131,8 +110,8 @@ public class CompanyImpl implements Company {
 		if (empl != null) {
 			updateEmpl = new Employee(empl.id(), empl.name(), newDepartment, empl.salary(), empl.birthDate());
 			employees.put(id, updateEmpl);
-			removeEmployeeDepartment(empl);
-			addEmployeeSalary(updateEmpl);
+			removeEmployeeData(empl, employeesDepartment, empl.department());
+			addEmployeeData(updateEmpl);
 		}
 		return updateEmpl;
 	}

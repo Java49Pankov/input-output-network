@@ -4,6 +4,8 @@ import java.util.stream.*;
 
 import telran.employees.dto.*;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 public class CompanyImpl implements Company {
@@ -26,21 +28,26 @@ public class CompanyImpl implements Company {
 	private void addEmployeeData(Employee empl) {
 		int salary = empl.salary();
 		String department = empl.department();
-		int birthDate = empl.birthDate().getYear();
+		int age = getAge(empl.birthDate());
 		employeesSalary.computeIfAbsent(salary, k -> new HashSet<>()).add(empl);
 		employeesDepartment.computeIfAbsent(department, k -> new HashSet<>()).add(empl);
-		employeesAge.computeIfAbsent(birthDate, k -> new HashSet<>()).add(empl);
+		employeesAge.computeIfAbsent(age, k -> new HashSet<>()).add(empl);
 	}
 
 	@Override
 	public Employee removeEmployee(long id) {
 		Employee res = employees.remove(id);
+		int age = getAge(res.birthDate());
 		if (res != null) {
 			removeEmployeeData(res, employeesSalary, res.salary());
 			removeEmployeeData(res, employeesDepartment, res.department());
-			removeEmployeeData(res, employeesAge, res.birthDate().getYear());
+			removeEmployeeData(res, employeesAge, age);
 		}
 		return res;
+	}
+
+	private int getAge(LocalDate birthDate) {
+		return (int) ChronoUnit.YEARS.between(birthDate, LocalDate.now());
 	}
 
 	private <T> void removeEmployeeData(Employee empl, Map<T, Collection<Employee>> collection, T key) {
@@ -58,20 +65,22 @@ public class CompanyImpl implements Company {
 
 	@Override
 	public List<Employee> getEmployees() {
-		return new ArrayList<>(employees.values());
+		return employees.values().stream().toList();
 	}
 
 	@Override
 	public List<DepartmentSalary> getDepartmentSalaryDistribution() {
 		return employees.values().stream()
 				.collect(Collectors.groupingBy(Employee::department, Collectors.averagingInt(Employee::salary)))
-				.entrySet().stream().map(e -> new DepartmentSalary(e.getKey(), e.getValue())).toList();
+				.entrySet().stream()
+				.map(e -> new DepartmentSalary(e.getKey(), e.getValue())).toList();
 	}
 
 	@Override
 	public List<SalaryDistribution> getSalaryDistribution(int interval) {
 		return employees.values().stream()
-				.collect(Collectors.groupingBy(e -> e.salary() / interval, Collectors.counting())).entrySet().stream()
+				.collect(Collectors.groupingBy(e -> e.salary() / interval, Collectors.counting()))
+				.entrySet().stream()
 				.map(e -> new SalaryDistribution(e.getKey() * interval, e.getKey() * interval + interval - 1,
 						e.getValue().intValue()))
 				.sorted((sd1, sd2) -> Integer.compare(sd1.minSalary(), sd2.minSalary())).toList();
@@ -79,13 +88,20 @@ public class CompanyImpl implements Company {
 
 	@Override
 	public List<Employee> getEmployeesByDepartment(String department) {
-		return new ArrayList<>(employeesDepartment.getOrDefault(department, Collections.emptyList()));
+		return employeesDepartment
+				.getOrDefault(department, Collections.emptyList())
+				.stream()
+				.toList();
 	}
 
 	@Override
 	public List<Employee> getEmployeesBySalary(int salaryFrom, int salaryTo) {
-		return employeesSalary.subMap(salaryFrom, true, salaryTo, true).values().stream()
-				.flatMap(col -> col.stream().sorted((empl1, empl2) -> Long.compare(empl1.id(), empl2.id()))).toList();
+		return employeesSalary
+				.subMap(salaryFrom, true, salaryTo, true)
+				.values().stream()
+				.flatMap(col -> col.stream()
+						.sorted((empl1, empl2) -> Long.compare(empl1.id(), empl2.id())))
+				.toList();
 	}
 
 	@Override
@@ -120,8 +136,13 @@ public class CompanyImpl implements Company {
 
 	@Override
 	public List<Employee> getEmployeesByAge(int ageFrom, int ageTo) {
-		return employeesAge.subMap(ageFrom, true, ageTo, true).values().stream()
-				.flatMap(col -> col.stream().sorted((empl1, empl2) -> Long.compare(empl1.id(), empl2.id()))).toList();
+		if (ageFrom > ageTo) {
+			return Collections.emptyList();
+		}
+		return employeesAge
+				.subMap(ageFrom, true, ageTo, true)
+				.values().stream()
+				.flatMap(col -> col.stream()).toList();
 	}
 
 }

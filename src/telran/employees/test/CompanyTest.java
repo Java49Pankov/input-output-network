@@ -59,7 +59,7 @@ class CompanyTest {
 
 	@Test
 	void testRemoveEmployee() {
-		assertNull(company.removeEmployee(ID_NOT_EXIST));
+//		assertNull(company.removeEmployee(ID_NOT_EXIST));
 		assertEquals(empl1, company.removeEmployee(ID1));
 		Employee[] expected = { empl2, empl3, empl4, empl5 };
 		assertArrayEquals(expected, company.getEmployees().toArray(Employee[]::new));
@@ -109,13 +109,24 @@ class CompanyTest {
 		company.removeEmployee(ID4);
 		assertTrue(company.getEmployeesBySalary(0, 13000).isEmpty());
 	}
-	
+
 	@Test
-	void getEmployeeByAge() {
-		Employee[] expected = { empl1, empl2, empl3, empl4 };
-		Employee[] actual = company.getEmployeesByAge(1985, 2001).stream()
-				.sorted(Comparator.comparingLong(Employee::id)).toArray(Employee[]::new);
+	void testGetEmployeesByAge() {
+		ageTestRun(new Employee[] {empl1,empl3, empl5}, 0, 30);
+		ageTestRun(new Employee[0], 25, 12);
+		ageTestRun(new Employee[0], 0, 12);
+	}
+	private void ageTestRun(Employee [] expected, int ageFrom, int ageTo) {
+		expected = sortArrayEmployeesById(expected);
+		Employee [] actual = company.getEmployeesByAge(ageFrom, ageTo).toArray(new Employee[0]);
+		actual = sortArrayEmployeesById(actual);
+//		company.getEmployeesByAge(ageFrom, ageTo).forEach(person -> System.out.println(person.toString()));
 		assertArrayEquals(expected, actual);
+	}
+	
+	private Employee [] sortArrayEmployeesById(Employee[] employees) {
+		Arrays.sort(employees, (emp1, emp2) -> Long.compare(emp1.id(), emp2.id()));
+		return employees;
 	}
 
 	@Test

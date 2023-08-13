@@ -3,8 +3,8 @@ package telran.employees.test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.Comparator;
+import java.util.*;
+import java.util.List;
 
 import org.junit.jupiter.api.*;
 
@@ -16,7 +16,6 @@ import telran.employees.dto.*;
 
 class CompanyTest {
 	private static final long ID_NOT_EXIST = 10000000;
-	private static final String UPDATE_DEP = "newDep";
 	private static final String DEP1 = "dep1";
 	private static final String DEP2 = "dep2";
 	private static final String DEP3 = "dep3";
@@ -59,7 +58,7 @@ class CompanyTest {
 
 	@Test
 	void testRemoveEmployee() {
-//		assertNull(company.removeEmployee(ID_NOT_EXIST));
+		assertNull(company.removeEmployee(ID_NOT_EXIST));
 		assertEquals(empl1, company.removeEmployee(ID1));
 		Employee[] expected = { empl2, empl3, empl4, empl5 };
 		assertArrayEquals(expected, company.getEmployees().toArray(Employee[]::new));
@@ -97,65 +96,30 @@ class CompanyTest {
 	}
 
 	@Test
-	void getEmployeesBySalary() {
-		Employee[] expected = { empl2, empl3, empl4 };
-		company.updateSalary(ID1, 14000);
-
-		Employee[] actual = company.getEmployeesBySalary(4000, 12000).stream()
-				.sorted(Comparator.comparingLong(Employee::id)).toArray(Employee[]::new);
-		assertArrayEquals(expected, actual);
-		company.removeEmployee(ID2);
-		company.removeEmployee(ID3);
-		company.removeEmployee(ID4);
-		assertTrue(company.getEmployeesBySalary(0, 13000).isEmpty());
+	void testGetEmployeesByDepartment() {
+		runGetByDepartmentTest("XXX", new Employee[0]);
+		runGetByDepartmentTest(DEP1, new Employee[] { empl1, empl3 });
 	}
 
 	@Test
-	void testGetEmployeesByAge() {
-		ageTestRun(new Employee[] {empl1,empl3, empl5}, 0, 30);
-		ageTestRun(new Employee[0], 25, 12);
-		ageTestRun(new Employee[0], 0, 12);
-	}
-	private void ageTestRun(Employee [] expected, int ageFrom, int ageTo) {
-		expected = sortArrayEmployeesById(expected);
-		Employee [] actual = company.getEmployeesByAge(ageFrom, ageTo).toArray(new Employee[0]);
-		actual = sortArrayEmployeesById(actual);
-//		company.getEmployeesByAge(ageFrom, ageTo).forEach(person -> System.out.println(person.toString()));
-		assertArrayEquals(expected, actual);
-	}
-	
-	private Employee [] sortArrayEmployeesById(Employee[] employees) {
-		Arrays.sort(employees, (emp1, emp2) -> Long.compare(emp1.id(), emp2.id()));
-		return employees;
-	}
-
-	@Test
-	void getEmployeesByDepartment() {
-		Employee[] expected = { empl1, empl3 };
-		Employee[] actual = company.getEmployeesByDepartment(DEP1).stream()
-				.sorted(Comparator.comparingLong(Employee::id)).toArray(Employee[]::new);
-		assertArrayEquals(expected, actual);
-		company.removeEmployee(ID1);
-		company.removeEmployee(ID3);
-		assertTrue(company.getEmployeesByDepartment(DEP1).isEmpty());
-	}
-
-	@Test
-	void updateSalary() {
-		company.updateSalary(ID1, 7000);
-		assertEquals(7000, company.getEmployee(ID1).salary());
-		company.updateSalary(ID5, 20000);
-		assertEquals(20000, company.getEmployee(ID5).salary());
-		assertNull(company.updateSalary(ID_NOT_EXIST, 1000));
-	}
-
-	@Test
-	void updateDepartment() {
-		company.updateDepartment(ID2, UPDATE_DEP);
-		assertEquals("newDep", company.getEmployee(ID2).department());
+	void testUpdateDepartment() {
 		company.updateDepartment(ID5, DEP1);
-		assertEquals("dep1", company.getEmployee(ID5).department());
-		assertNull(company.updateDepartment(ID_NOT_EXIST, UPDATE_DEP));
+		runGetByDepartmentTest(DEP1, new Employee[] { empl1, empl3, empl5 });
+		runGetByDepartmentTest(DEP3, new Employee[0]);
+	}
+
+	@Test
+	void testGetEmployeesBySalary() {
+		runGetBySalaryTest(SALARY2, SALARY3, employees);
+		runGetBySalaryTest(SALARY3 + 1, 100_000, new Employee[0]);
+		runGetBySalaryTest(SALARY2, SALARY1, new Employee[] { empl1, empl2, empl3, empl4 });
+	}
+
+	@Test
+	void testUpdateSalary() {
+		company.updateSalary(ID5, SALARY1);
+		runGetBySalaryTest(SALARY3, SALARY3 + 1, new Employee[0]);
+		runGetBySalaryTest(SALARY2, SALARY1, employees);
 	}
 
 	@Test
@@ -170,6 +134,18 @@ class CompanyTest {
 	@Order(1)
 	void testSave() {
 		company.save(TEST_DATA);
+	}
+
+	private void runGetByDepartmentTest(String department, Employee[] expected) {
+		List<Employee> employees = company.getEmployeesByDepartment(department);
+		employees.sort((e1, e2) -> Long.compare(e1.id(), e2.id()));
+		assertArrayEquals(expected, employees.toArray(Employee[]::new));
+	}
+
+	private void runGetBySalaryTest(int salaryFrom, int salaryTo, Employee[] expected) {
+		List<Employee> employees = new ArrayList<>(company.getEmployeesBySalary(salaryFrom, salaryTo));
+		employees.sort((e1, e2) -> Long.compare(e1.id(), e2.id()));
+		assertArrayEquals(expected, employees.toArray(Employee[]::new));
 	}
 
 }

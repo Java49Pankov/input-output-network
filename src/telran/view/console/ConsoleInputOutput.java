@@ -28,7 +28,7 @@ public class ConsoleInputOutput {
 	}
 
 	public <T> T readObject(String prompt, String errorPrompt, Function<String, T> mapper) {
-		boolean running = true;
+		boolean running = false;
 		T res = null;
 		do {
 			String resInput = readString(prompt);
@@ -36,7 +36,8 @@ public class ConsoleInputOutput {
 				res = mapper.apply(resInput);
 				running = false;
 			} catch (Exception e) {
-				writeLine(errorPrompt + ":" + e.getMessage());
+				writeLine(errorPrompt + ": " + e.getMessage());
+				running = true;
 			}
 		} while (running);
 		return res;
@@ -52,7 +53,7 @@ public class ConsoleInputOutput {
 			if (res < min) {
 				throw new IllegalArgumentException("must be not less than " + min);
 			}
-			if (res > min) {
+			if (res > max) {
 				throw new IllegalArgumentException("must be not greater than " + max);
 			}
 			return res;
@@ -64,7 +65,7 @@ public class ConsoleInputOutput {
 	}
 
 	public long readLong(String prompt, String errorPrompt, long min, long max) {
-		return readObject(String.format("%s[%d - %d", prompt, min, max), errorPrompt, string -> {
+		return readObject(String.format("%s[%d - %d]", prompt, min, max), errorPrompt, string -> {
 			long res = Long.parseLong(string);
 			if (res < min) {
 				throw new IllegalArgumentException("must be not less than " + min);
@@ -76,7 +77,7 @@ public class ConsoleInputOutput {
 		});
 	}
 
-	public String readString(String prompt, String errorPrompt, Predicate<String> predicate) {
+	public String readStringPredicate(String prompt, String errorPrompt, Predicate<String> predicate) {
 		return readObject(prompt, errorPrompt, string -> {
 			if (!predicate.test(string)) {
 				throw new RuntimeException();
@@ -87,7 +88,7 @@ public class ConsoleInputOutput {
 
 	public String readString(String prompt, String errorPrompt, Set<String> options) {
 		return readObject(prompt, errorPrompt, string -> {
-			if (options.contains(string)) {
+			if (!options.contains(string)) {
 				throw new RuntimeException();
 			}
 			return string;
@@ -112,6 +113,12 @@ public class ConsoleInputOutput {
 	}
 
 	public double readDouble(String prompt, String errorPrompt) {
-		return readObject(prompt, errorPrompt, Double::parseDouble);
+		return readObject(prompt, errorPrompt, num -> {
+			double res = Double.parseDouble(num);
+			if (res == Math.floor(res)) {
+				throw new IllegalArgumentException(errorPrompt);
+			}
+			return res;
+		});
 	}
 }

@@ -28,15 +28,15 @@ public class ConsoleInputOutput {
 	}
 
 	public <T> T readObject(String prompt, String errorPrompt, Function<String, T> mapper) {
-		boolean running = false;
+		boolean running = true;
 		T res = null;
 		do {
 			String resInput = readString(prompt);
 			try {
 				res = mapper.apply(resInput);
+				running = false;
 			} catch (Exception e) {
 				writeLine(errorPrompt + ":" + e.getMessage());
-				running = true;
 			}
 		} while (running);
 		return res;
@@ -60,37 +60,58 @@ public class ConsoleInputOutput {
 	}
 
 	public long readLong(String prompt, String errorPrompt) {
-		// TODO
-		return 0;
+		return readObject(prompt, errorPrompt, Long::parseLong);
 	}
 
 	public long readLong(String prompt, String errorPrompt, long min, long max) {
-		// TODO
-		return 0;
+		return readObject(String.format("%s[%d - %d", prompt, min, max), errorPrompt, string -> {
+			long res = Long.parseLong(string);
+			if (res < min) {
+				throw new IllegalArgumentException("must be not less than " + min);
+			}
+			if (res > max) {
+				throw new IllegalArgumentException("must be not greater than " + max);
+			}
+			return res;
+		});
 	}
 
 	public String readString(String prompt, String errorPrompt, Predicate<String> predicate) {
-		// TODO
-		return "";
+		return readObject(prompt, errorPrompt, string -> {
+			if (!predicate.test(string)) {
+				throw new RuntimeException();
+			}
+			return string;
+		});
 	}
 
 	public String readString(String prompt, String errorPrompt, Set<String> options) {
-		// TODO
-		return "";
+		return readObject(prompt, errorPrompt, string -> {
+			if (options.contains(string)) {
+				throw new RuntimeException();
+			}
+			return string;
+		});
 	}
 
 	public LocalDate readDate(String prompt, String errorPrompt) {
-		// TODO
-		return null;
+		return readObject(prompt, errorPrompt, LocalDate::parse);
 	}
 
 	public LocalDate readDate(String prompt, String errorPrompt, LocalDate from, LocalDate to) {
-		// TODO
-		return null;
+		return readObject(prompt, errorPrompt, date -> {
+			LocalDate res = LocalDate.parse(date);
+			if (res.isBefore(from)) {
+				throw new IllegalArgumentException("must be not less than " + from);
+			}
+			if (res.isAfter(to)) {
+				throw new IllegalArgumentException("must be not less than " + to);
+			}
+			return res;
+		});
 	}
 
 	public double readDouble(String prompt, String errorPrompt) {
-		// TODO
-		return 0.0;
+		return readObject(prompt, errorPrompt, Double::parseDouble);
 	}
 }

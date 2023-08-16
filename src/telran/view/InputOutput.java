@@ -1,34 +1,20 @@
-package telran.view.console;
+package telran.view;
 
-import java.io.*;
 import java.time.LocalDate;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public class ConsoleInputOutput {
-	private BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
-	private PrintStream output = System.out;
+public interface InputOutput {
+	public String readString(String prompt);
 
-	public String readString(String prompt) {
-		output.println(prompt);
-		try {
-			String res = input.readLine();
-			return res;
-		} catch (IOException e) {
-			throw new RuntimeException(e.getMessage());
-		}
+	public void write(Object obj);
+
+	default void writeLine(Object obj) {
+		write(obj + "\n");
 	}
 
-	public void write(String string) {
-		output.print(string);
-	}
-
-	public void writeLine(String string) {
-		write(string + "\n");
-	}
-
-	public <T> T readObject(String prompt, String errorPrompt, Function<String, T> mapper) {
+	default <T> T readObject(String prompt, String errorPrompt, Function<String, T> mapper) {
 		boolean running = false;
 		T res = null;
 		do {
@@ -45,11 +31,11 @@ public class ConsoleInputOutput {
 		return res;
 	}
 
-	public int readInt(String prompt, String errorPrompt) {
+	default int readInt(String prompt, String errorPrompt) {
 		return readObject(prompt, errorPrompt, Integer::parseInt);
 	}
 
-	public int readInt(String prompt, String errorPrompt, int min, int max) {
+	default int readInt(String prompt, String errorPrompt, int min, int max) {
 		return readObject(String.format("%s[%d - %d] ", prompt, min, max), errorPrompt, string -> {
 			int res = Integer.parseInt(string);
 			if (res < min) {
@@ -63,11 +49,11 @@ public class ConsoleInputOutput {
 		});
 	}
 
-	public long readLong(String prompt, String errorPrompt) {
+	default long readLong(String prompt, String errorPrompt) {
 		return readObject(prompt, errorPrompt, Long::parseLong);
 	}
 
-	public long readLong(String prompt, String errorPrompt, long min, long max) {
+	default long readLong(String prompt, String errorPrompt, long min, long max) {
 		return readObject(String.format("%s[%d - %d] ", prompt, min, max), errorPrompt, string -> {
 			long res = Long.parseLong(string);
 			if (res < min) {
@@ -80,7 +66,7 @@ public class ConsoleInputOutput {
 		});
 	}
 
-	public String readString(String prompt, String errorPrompt, Predicate<String> predicate) {
+	default String readString(String prompt, String errorPrompt, Predicate<String> predicate) {
 		return readObject(prompt, errorPrompt, string -> {
 			if (!predicate.test(string)) {
 				throw new IllegalArgumentException("");
@@ -89,15 +75,15 @@ public class ConsoleInputOutput {
 		});
 	}
 
-	public String readString(String prompt, String errorPrompt, Set<String> options) {
+	default String readString(String prompt, String errorPrompt, Set<String> options) {
 		return readString(prompt, errorPrompt, options::contains);
 	}
 
-	public LocalDate readDate(String prompt, String errorPrompt) {
+	default LocalDate readDate(String prompt, String errorPrompt) {
 		return readObject(prompt, errorPrompt, LocalDate::parse);
 	}
 
-	public LocalDate readDate(String prompt, String errorPrompt, LocalDate from, LocalDate to) {
+	default LocalDate readDate(String prompt, String errorPrompt, LocalDate from, LocalDate to) {
 		return readObject(prompt, errorPrompt, string -> {
 			LocalDate res = LocalDate.parse(string);
 			if (res.isBefore(from) || res.isAfter(to)) {
@@ -108,7 +94,7 @@ public class ConsoleInputOutput {
 		});
 	}
 
-	public double readDouble(String prompt, String errorPrompt) {
+	default double readDouble(String prompt, String errorPrompt) {
 		return readObject(prompt, errorPrompt, Double::parseDouble);
 	}
 }

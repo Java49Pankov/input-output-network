@@ -2,8 +2,9 @@ package telran.view.console;
 
 import java.io.*;
 import java.time.LocalDate;
-import java.util.*;
-import java.util.function.*;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class ConsoleInputOutput {
 	private BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
@@ -31,10 +32,11 @@ public class ConsoleInputOutput {
 		boolean running = false;
 		T res = null;
 		do {
+			running = false;
 			String resInput = readString(prompt);
 			try {
 				res = mapper.apply(resInput);
-				running = false;
+
 			} catch (Exception e) {
 				writeLine(errorPrompt + ": " + e.getMessage());
 				running = true;
@@ -48,7 +50,7 @@ public class ConsoleInputOutput {
 	}
 
 	public int readInt(String prompt, String errorPrompt, int min, int max) {
-		return readObject(String.format("%s[%d - %d]", prompt, min, max), errorPrompt, string -> {
+		return readObject(String.format("%s[%d - %d] ", prompt, min, max), errorPrompt, string -> {
 			int res = Integer.parseInt(string);
 			if (res < min) {
 				throw new IllegalArgumentException("must be not less than " + min);
@@ -57,6 +59,7 @@ public class ConsoleInputOutput {
 				throw new IllegalArgumentException("must be not greater than " + max);
 			}
 			return res;
+
 		});
 	}
 
@@ -65,7 +68,7 @@ public class ConsoleInputOutput {
 	}
 
 	public long readLong(String prompt, String errorPrompt, long min, long max) {
-		return readObject(String.format("%s[%d - %d]", prompt, min, max), errorPrompt, string -> {
+		return readObject(String.format("%s[%d - %d] ", prompt, min, max), errorPrompt, string -> {
 			long res = Long.parseLong(string);
 			if (res < min) {
 				throw new IllegalArgumentException("must be not less than " + min);
@@ -77,22 +80,17 @@ public class ConsoleInputOutput {
 		});
 	}
 
-	public String readStringPredicate(String prompt, String errorPrompt, Predicate<String> predicate) {
+	public String readString(String prompt, String errorPrompt, Predicate<String> predicate) {
 		return readObject(prompt, errorPrompt, string -> {
 			if (!predicate.test(string)) {
-				throw new RuntimeException();
+				throw new IllegalArgumentException("");
 			}
 			return string;
 		});
 	}
 
 	public String readString(String prompt, String errorPrompt, Set<String> options) {
-		return readObject(prompt, errorPrompt, string -> {
-			if (!options.contains(string)) {
-				throw new RuntimeException();
-			}
-			return string;
-		});
+		return readString(prompt, errorPrompt, options::contains);
 	}
 
 	public LocalDate readDate(String prompt, String errorPrompt) {
@@ -100,25 +98,17 @@ public class ConsoleInputOutput {
 	}
 
 	public LocalDate readDate(String prompt, String errorPrompt, LocalDate from, LocalDate to) {
-		return readObject(prompt, errorPrompt, date -> {
-			LocalDate res = LocalDate.parse(date);
-			if (res.isBefore(from)) {
-				throw new IllegalArgumentException("must be not less than " + from);
-			}
-			if (res.isAfter(to)) {
-				throw new IllegalArgumentException("must be not less than " + to);
+		return readObject(prompt, errorPrompt, string -> {
+			LocalDate res = LocalDate.parse(string);
+			if (res.isBefore(from) || res.isAfter(to)) {
+				throw new IllegalArgumentException(
+						String.format("Date should be in the range from %s to %s", from, to));
 			}
 			return res;
 		});
 	}
 
 	public double readDouble(String prompt, String errorPrompt) {
-		return readObject(prompt, errorPrompt, num -> {
-			double res = Double.parseDouble(num);
-			if (res == Math.floor(res)) {
-				throw new IllegalArgumentException(errorPrompt);
-			}
-			return res;
-		});
+		return readObject(prompt, errorPrompt, Double::parseDouble);
 	}
 }

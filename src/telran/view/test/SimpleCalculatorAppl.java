@@ -1,5 +1,7 @@
 package telran.view.test;
 
+import java.util.function.BinaryOperator;
+
 import telran.view.*;
 
 public class SimpleCalculatorAppl {
@@ -10,38 +12,18 @@ public class SimpleCalculatorAppl {
 		menu.perform(io);
 	}
 
-	static double[] getToNumbers(InputOutput io) {
+	static void calculate(InputOutput io, BinaryOperator<Double> operator) {
 		double first = io.readDouble("Enter first number", "Must be any number");
 		double second = io.readDouble("Enter second number", "Must be any number");
-		return new double[] { first, second };
+		io.writeLine(operator.apply(first, second));
 	}
 
 	static Item[] getItems() {
-		Item[] items = { Item.of("Add number", SimpleCalculatorAppl::add),
-				Item.of("Subtract numbers", SimpleCalculatorAppl::subtract),
-				Item.of("Multiply numbers", SimpleCalculatorAppl::multiply),
-				Item.of("Divide numbers", SimpleCalculatorAppl::divide), Item.ofExit() };
-
+		Item[] items = { Item.of("Add number", io -> calculate(io, (a, b) -> a + b)),
+				Item.of("Subtract numbers", io -> calculate(io, (a, b) -> a - b)),
+				Item.of("Multiply numbers", io -> calculate(io, (a, b) -> a * b)),
+				Item.of("Divide numbers", io -> calculate(io, (a, b) -> a / b)), Item.ofExit() };
 		return items;
 	}
 
-	static void add(InputOutput io) {
-		double[] numbers = getToNumbers(io);
-		io.writeLine(numbers[0] + numbers[1]);
-	}
-
-	static void subtract(InputOutput io) {
-		double[] numbers = getToNumbers(io);
-		io.writeLine(numbers[0] - numbers[1]);
-	}
-
-	static void multiply(InputOutput io) {
-		double[] numbers = getToNumbers(io);
-		io.writeLine(numbers[0] * numbers[1]);
-	}
-
-	static void divide(InputOutput io) {
-		double[] numbers = getToNumbers(io);
-		io.writeLine(numbers[0] / numbers[1]);
-	}
 }

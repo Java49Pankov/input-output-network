@@ -34,7 +34,8 @@ public interface Item {
 	}
 
 	static Item ofExit() {
-		return of("Exit", io -> {}, true);
+		return of("Exit", io -> {
+		}, true);
 	}
 
 }

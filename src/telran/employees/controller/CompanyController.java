@@ -24,8 +24,7 @@ public class CompanyController {
 	}
 
 	private static Item[] getItems() {
-		return new Item[] { 
-				 Item.of("Add new Employee", CompanyController::addEmployeeItem),
+		return new Item[] { Item.of("Add new Employee", CompanyController::addEmployeeItem),
 				Item.of("Remove Employee", CompanyController::removeEmployeeItem),
 				Item.of("All Employee", CompanyController::getEmployeesItem),
 				Item.of("Data about Employee", CompanyController::getEmployeeItem),
@@ -58,15 +57,20 @@ public class CompanyController {
 	}
 
 	static void removeEmployeeItem(InputOutput io) {
-		// TODO
+		long id = io.readLong("Enter id Employee identity", "Wrong identity value", MIN_ID, MAX_ID);
+		Employee employee = company.getEmployee(id);
+		io.writeLine(employee != null ? company.removeEmployee(id) : "Employee by ID does not exist");
 	}
 
 	static void getEmployeeItem(InputOutput io) {
-		// TODO
+		long id = io.readLong("Enter id Employee identity", "Wrong identity value", MIN_ID, MAX_ID);
+		Employee employee = company.getEmployee(id);
+		io.writeLine(employee != null ? employee : "Employee by ID does not exist");
 	}
 
 	static void getEmployeesItem(InputOutput io) {
-		// TODO
+		List<Employee> employees = company.getEmployees();
+		io.writeLine(employees);
 	}
 
 	static void getDepartmentSalaryDistributionItem(InputOutput io) {
@@ -74,26 +78,40 @@ public class CompanyController {
 	}
 
 	static void getSalaryDistributionItem(InputOutput io) {
-		// TODO
+		int interval = io.readInt("Enter salary range", "Wrong value");
+		company.getSalaryDistribution(interval).forEach(io::writeLine);
+		;
 	}
 
 	static void getEmployeesByDepartmentItem(InputOutput io) {
-		// TODO
+		String department = io.readString("Enter department", "Wrong department", departments);
+		company.getEmployeesByDepartment(department).forEach(io::writeLine);
 	}
 
 	static void getEmployeesBySalaryItem(InputOutput io) {
-		// TODO
+		int salaryFrom = io.readInt("Enter min salary", "Wrong salary");
+		int salaryTo = io.readInt("Enter max salary", "Wrong salary");
+		io.writeLine(salaryFrom < salaryTo ? company.getEmployeesBySalary(salaryFrom, salaryTo)
+				: "the salary from should be less than the salary to");
 	}
 
 	static void getEmployeesByAgeItem(InputOutput io) {
-		// TODO
+		int ageFrom = io.readInt("Enter min age", "Wrong age");
+		int ageTo = io.readInt("Enter max age", "Wrong age");
+		io.writeLine(ageFrom < ageTo ? company.getEmployeesByAge(ageFrom, ageTo) : "age from must be less than age to");
 	}
 
 	static void updateSalaryItem(InputOutput io) {
-		// TODO
+		long id = io.readLong("Enter id Employee identity", "Wrong identity value", MIN_ID, MAX_ID);
+		int salary = io.readInt("Enter new salary", "Wrong salary");
+		Employee employee = company.getEmployee(id);
+		io.writeLine(employee != null ? company.updateSalary(id, salary) : "Employee by ID does not exist");
 	}
 
 	static void updateDepartmentItem(InputOutput io) {
-		// TODO
+		long id = io.readLong("Enter id Employee identity", "Wrong identity value", MIN_ID, MAX_ID);
+		String department = io.readString("Enter new department", "Wrong department", departments);
+		Employee employee = company.getEmployee(id);
+		io.writeLine(employee != null ? company.updateDepartment(id, department) : "Employee by ID does not exist");
 	}
 }

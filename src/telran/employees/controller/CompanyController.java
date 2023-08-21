@@ -25,7 +25,7 @@ public class CompanyController {
 
 	private static Item[] getItems() {
 		return new Item[] { 
-				Item.of("Add new Employee", CompanyController::addEmployeeItem),
+				 Item.of("Add new Employee", CompanyController::addEmployeeItem),
 				Item.of("Remove Employee", CompanyController::removeEmployeeItem),
 				Item.of("All Employee", CompanyController::getEmployeesItem),
 				Item.of("Data about Employee", CompanyController::getEmployeeItem),

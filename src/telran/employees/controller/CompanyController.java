@@ -41,31 +41,47 @@ public class CompanyController {
 			Arrays.asList(new String[] { "QA", "Development", "Audit", "Management", "Accouting" }));
 
 	static void addEmployeeItem(InputOutput io) {
-		long id = io.readLong("Enter id Employee identity", "Wrong identity value", MIN_ID, MAX_ID);
+		Long id = io.readLong("Enter id Employee identity", "Wrong identity value", MIN_ID, MAX_ID);
+		Employee employee = company.getEmployee(id);
+		if (employee != null) {
+			io.writeLine(String.format("Employee with id %d already exists", id));
+			return;
+		}
 		String name = io.readString("Enter name", "Wrong name", str -> str.matches("[A-Z][a-z]+"));
-		String department = io.readString("Enter department", "Wrong department", departments);
-		int salary = io.readInt("Enter salary", "Wrong salary", MIN_SALARY, MAX_SALARY);
+		String department = getDepartment(io);
+		int salary = getSalary(io);
 		LocalDate birthDate = io.readDate("Enter birth date", "Wrong birth date entered", getBirthDate(MAX_AGE),
 				getBirthDate(MIN_AGE));
-		boolean res = company.addEmployee(new Employee(id, name, department, salary, birthDate));
-		io.writeLine(res ? String.format("Employee with id %d has been added", id)
-				: String.format("Employee with id %d already exists", id));
+		company.addEmployee(new Employee(id, name, department, salary, birthDate));
+		io.writeLine(String.format("Employee with id %d has been added", id));
+	}
+
+	private static int getSalary(InputOutput io) {
+		return io.readInt("Enter salary", "Wrong salary", MIN_SALARY, MAX_SALARY);
+	}
+
+	private static String getDepartment(InputOutput io) {
+		return io.readString("Enter department", "Wrong department", departments);
 	}
 
 	private static LocalDate getBirthDate(int age) {
 		return LocalDate.now().minusYears(age);
 	}
 
-	static void removeEmployeeItem(InputOutput io) {
-		long id = io.readLong("Enter id Employee identity", "Wrong identity value", MIN_ID, MAX_ID);
+	private static Long getId(InputOutput io) {
+		Long id = io.readLong("Enter id Employee identity", "Wrong identity value", MIN_ID, MAX_ID);
 		Employee employee = company.getEmployee(id);
-		io.writeLine(employee != null ? company.removeEmployee(id) : "Employee by ID does not exist");
+		return employee != null ? id : null;
+	}
+
+	static void removeEmployeeItem(InputOutput io) {
+		Long id = getId(io);
+		io.writeLine(id != null ? company.removeEmployee(id) : "Employee by ID does not exist");
 	}
 
 	static void getEmployeeItem(InputOutput io) {
-		long id = io.readLong("Enter id Employee identity", "Wrong identity value", MIN_ID, MAX_ID);
-		Employee employee = company.getEmployee(id);
-		io.writeLine(employee != null ? employee : "Employee by ID does not exist");
+		Long id = getId(io);
+		io.writeLine(id != null ? company.getEmployee(id) : "Employee by ID does not exist");
 	}
 
 	static void getEmployeesItem(InputOutput io) {
@@ -84,7 +100,7 @@ public class CompanyController {
 	}
 
 	static void getEmployeesByDepartmentItem(InputOutput io) {
-		String department = io.readString("Enter department", "Wrong department", departments);
+		String department = getDepartment(io);
 		company.getEmployeesByDepartment(department).forEach(io::writeLine);
 	}
 
@@ -102,16 +118,15 @@ public class CompanyController {
 	}
 
 	static void updateSalaryItem(InputOutput io) {
-		long id = io.readLong("Enter id Employee identity", "Wrong identity value", MIN_ID, MAX_ID);
-		int salary = io.readInt("Enter new salary", "Wrong salary");
-		Employee employee = company.getEmployee(id);
-		io.writeLine(employee != null ? company.updateSalary(id, salary) : "Employee by ID does not exist");
+		Long id = getId(io);
+		int salary = getSalary(io);
+		io.writeLine(id != null ? company.updateSalary(id, salary) : "Employee by ID does not exist");
 	}
 
 	static void updateDepartmentItem(InputOutput io) {
-		long id = io.readLong("Enter id Employee identity", "Wrong identity value", MIN_ID, MAX_ID);
-		String department = io.readString("Enter new department", "Wrong department", departments);
-		Employee employee = company.getEmployee(id);
-		io.writeLine(employee != null ? company.updateDepartment(id, department) : "Employee by ID does not exist");
+		Long id = getId(io);
+		String department = getDepartment(io);
+		io.writeLine(id != null ? company.updateDepartment(id, department) : "Employee by ID does not exist");
 	}
+
 }

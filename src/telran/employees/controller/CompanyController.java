@@ -43,8 +43,16 @@ public class CompanyController {
 	static private Long getId(InputOutput io, boolean isExists) {
 		Long id = io.readLong("Enter Employee identity", "Wrong identity value", MIN_ID, MAX_ID);
 		Employee empl = company.getEmployee(id);
-		return (empl != null && isExists) || (empl == null && !isExists) ? id : null;
-
+		String exceptionText = "";
+		Long res = (empl != null && isExists) || (empl == null && !isExists) ? id : null;
+		if (res == null) {
+			exceptionText = isExists ? String.format("Employee with id %d doesn't exist", id)
+					: String.format("Employee with id %d already exist", id);
+		}
+		if (!exceptionText.isEmpty()) {
+			throw new RuntimeException(exceptionText);
+		}
+		return res;
 	}
 
 	static private <T> void displayList(List<T> list, InputOutput io) {
@@ -59,9 +67,6 @@ public class CompanyController {
 
 	static void addEmployeeItem(InputOutput io) {
 		Long id = getId(io, false);
-		if (id == null) {
-			throw new RuntimeException("Employee with entered ID already exists");
-		}
 		String name = io.readString("Enter name", "Wrong name", str -> str.matches("[A-Z][a-z]+"));
 		String department = getDepartment(io);
 		int salary = io.readInt("Enter salary", "Wrong salary", MIN_SALARY, MAX_SALARY);
@@ -82,18 +87,12 @@ public class CompanyController {
 
 	static void removeEmployeeItem(InputOutput io) {
 		Long id = getId(io, true);
-		if (id == null) {
-			throw new RuntimeException("Employee with entered ID doesn't exist");
-		}
 		io.write("Removed employee is ");
 		io.writeLine(company.removeEmployee(id));
 	}
 
 	static void getEmployeeItem(InputOutput io) {
 		Long id = getId(io, true);
-		if (id == null) {
-			throw new RuntimeException("Employee with entered ID doesn't exist");
-		}
 		io.write("employee is ");
 		io.writeLine(company.getEmployee(id));
 	}
@@ -140,9 +139,6 @@ public class CompanyController {
 
 	static void updateSalaryItem(InputOutput io) {
 		Long id = getId(io, true);
-		if (id == null) {
-			throw new RuntimeException("Employee with entered ID doesn't exist");
-		}
 		int salary = io.readInt("Enter new salary value", "Wrong salary value", MIN_SALARY, MAX_SALARY);
 		Employee empl = company.updateSalary(id, salary);
 		io.writeLine(String.format("old salary value %d of employee %d" + " has been updated with new value %d",
@@ -151,9 +147,6 @@ public class CompanyController {
 
 	static void updateDepartmentItem(InputOutput io) {
 		Long id = getId(io, true);
-		if (id == null) {
-			throw new RuntimeException("Employee with entered ID doesn't exist");
-		}
 		String department = getDepartment(io);
 		Employee empl = company.updateDepartment(id, department);
 		io.writeLine(String.format("old deprtment %s of employee %d" + " has been updated with department %s",

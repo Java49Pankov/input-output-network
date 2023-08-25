@@ -31,7 +31,7 @@ public class TcpServerCalculator {
 				writer.println(response);
 			}
 		} catch (Exception e) {
-			System.out.println("Clien close abnormally connection");
+			System.out.println("Client close abnormally connection");
 		}
 	}
 
@@ -42,28 +42,20 @@ public class TcpServerCalculator {
 			String requestType = tokens[0];
 			double firstOperand = Double.parseDouble(tokens[1]);
 			double secondOperand = Double.parseDouble(tokens[2]);
-			switch (requestType) {
-			case "add":
-				response = String.valueOf(firstOperand + secondOperand);
-				break;
-			case "subtract":
-				response = String.valueOf(firstOperand - secondOperand);
-				break;
-			case "multiply":
-				response = String.valueOf(firstOperand * secondOperand);
-				break;
-			case "divide":
-				if (secondOperand != 0) {
-					response = String.valueOf(firstOperand / secondOperand);
-				} else {
-					response = "Division by zero is not allowed";
-				}
-				break;
-			default:
-				response = "wrong request type";
-				break;
-			}
+			response = calculate(requestType, firstOperand, secondOperand);
 		}
+		return response;
+	}
+
+	private static String calculate(String requestType, double firstOperand, double secondOperand) {
+		String response = switch (requestType) {
+		case "add" -> String.valueOf(firstOperand + secondOperand);
+		case "subtract" -> String.valueOf(firstOperand - secondOperand);
+		case "multiply" -> String.valueOf(firstOperand * secondOperand);
+		case "divide" ->
+			secondOperand != 0 ? String.valueOf(firstOperand / secondOperand) : "Division by zero is not allowed";
+		default -> "wrong request type";
+		};
 		return response;
 	}
 

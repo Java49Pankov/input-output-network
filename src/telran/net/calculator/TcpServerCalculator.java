@@ -21,13 +21,15 @@ public class TcpServerCalculator {
 	private static void clientRun(Socket socket) {
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 				PrintStream writer = new PrintStream(socket.getOutputStream())) {
-			String line;
-			while ((line = reader.readLine()) != null) {
+			while (true) {
+				String line = reader.readLine();
+				if (line == null) {
+					System.out.println("Client close normally connection");
+					break;
+				}
 				String response = getResponse(line);
 				writer.println(response);
 			}
-			String response = getResponse(line);
-			writer.println(response);
 		} catch (Exception e) {
 			System.out.println("Clien close abnormally connection");
 		}

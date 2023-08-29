@@ -23,10 +23,13 @@ public class TcpHandler implements Closeable {
 		Request request = new Request(requestType, requestData);
 		try {
 			output.writeObject(request);
+
 			Response response = (Response) input.readObject();
+
 			if (response.code() != ResponseCode.OK) {
 				throw new RuntimeException(response.responseData().toString());
 			}
+
 			@SuppressWarnings("unchecked")
 			T res = (T) response.responseData();
 			return res;

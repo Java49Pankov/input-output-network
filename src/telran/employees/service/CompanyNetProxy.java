@@ -29,16 +29,6 @@ public class CompanyNetProxy implements Company {
 	}
 
 	@Override
-	public Employee updateSalary(long id, int newSalary) {
-		return tcpHandler.send("salary/update", new UpdateData<Integer>(id, newSalary));
-	}
-
-	@Override
-	public Employee updateDepartment(long id, String newDepartment) {
-		return tcpHandler.send("department/update", new UpdateData<String>(id, newDepartment));
-	}
-
-	@Override
 	public List<Employee> getEmployees() {
 		return tcpHandler.send("employees/get", null);
 	}
@@ -50,7 +40,7 @@ public class CompanyNetProxy implements Company {
 
 	@Override
 	public List<SalaryDistribution> getSalaryDistribution(int interval) {
-		return tcpHandler.send("department/distribution", interval);
+		return tcpHandler.send("salary/distribution", interval);
 	}
 
 	@Override
@@ -68,4 +58,13 @@ public class CompanyNetProxy implements Company {
 		return tcpHandler.send("employees/age", new FromTo(ageFrom, ageTo));
 	}
 
+	@Override
+	public Employee updateSalary(long id, int newSalary) {
+		return tcpHandler.send("salary/update", new UpdateData<Integer>(id, newSalary));
+	}
+
+	@Override
+	public Employee updateDepartment(long id, String newDepartment) {
+		return tcpHandler.send("department/update", new UpdateData<String>(id, newDepartment));
+	}
 }

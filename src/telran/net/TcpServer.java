@@ -12,7 +12,7 @@ public class TcpServer implements Runnable {
 	private ApplProtocol protocol;
 	private ServerSocket serverSocket;
 	AtomicInteger clientsCounter = new AtomicInteger(0);
-	int nThreads = Runtime.getRuntime().availableProcessors();
+	int nThreads = /* Runtime.getRuntime().availableProcessors() */2;
 	ExecutorService threadPool = Executors.newFixedThreadPool(nThreads);
 	boolean isShutdown = false;
 
@@ -31,7 +31,7 @@ public class TcpServer implements Runnable {
 	@Override
 	public void run() {
 		System.out.println("Server is listening on port " + port);
- 		while (!isShutdown) {
+		while (!isShutdown) {
 			try {
 				Socket socket = serverSocket.accept();
 				TcpClientServer clientServer = new TcpClientServer(socket, protocol, this);

@@ -4,11 +4,19 @@ import java.io.*;
 import java.net.*;
 
 public class TcpHandler implements Closeable {
+	private String host;
+	private int port;
 	private Socket socket;
 	private ObjectOutputStream output;
 	private ObjectInputStream input;
 
 	public TcpHandler(String host, int port) throws Exception {
+		this.host = host;
+		this.port = port;
+		connect();
+	}
+
+	private void connect() throws UnknownHostException, IOException {
 		socket = new Socket(host, port);
 		output = new ObjectOutputStream(socket.getOutputStream());
 		input = new ObjectInputStream(socket.getInputStream());
@@ -21,18 +29,32 @@ public class TcpHandler implements Closeable {
 
 	public <T> T send(String requestType, Serializable requestData) {
 		Request request = new Request(requestType, requestData);
-		try {
-			output.writeObject(request);
-			Response response = (Response) input.readObject();
-			if (response.code() != ResponseCode.OK) {
-				throw new RuntimeException(response.responseData().toString());
+		boolean running = true;
+		while (running) {
+			running = false;
+			try {
+				output.writeObject(request);
+				Response response = (Response) input.readObject();
+				if (response.code() != ResponseCode.OK) {
+					throw new RuntimeException(response.responseData().toString());
+				}
+				@SuppressWarnings("unchecked")
+				T res = (T) response.responseData();
+				return res;
+			} catch (Exception e) {
+				if (e instanceof SocketException) {
+					running = true;
+					try {
+						connect();
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
+				} else {
+					throw new RuntimeException(e.getMessage());
+				}
 			}
-			@SuppressWarnings("unchecked")
-			T res = (T) response.responseData();
-			return res;
-		} catch (Exception e) {
-			throw new RuntimeException(e.getMessage());
 		}
+		return null;
 	}
 
 }

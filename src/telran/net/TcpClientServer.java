@@ -57,8 +57,8 @@ public class TcpClientServer implements Runnable {
 				System.out.println("client closed abnormally connection " + e.getMessage());
 				break;
 			}
-			tcpServer.clientsCounter.decrementAndGet();
 		}
+		tcpServer.clientsCounter.decrementAndGet();
 	}
 
 }

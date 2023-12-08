@@ -1,7 +1,9 @@
 package telran.employees;
 
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.*;
 
 import telran.employees.dto.Employee;
 import telran.employees.dto.FromTo;
@@ -9,6 +11,7 @@ import telran.employees.dto.UpdateData;
 import telran.employees.service.Company;
 import telran.net.*;
 
+@SuppressWarnings("unused")
 public class CompanyProtocol implements ApplProtocol {
 	private Company company;
 
@@ -21,24 +24,21 @@ public class CompanyProtocol implements ApplProtocol {
 		Response response = null;
 		String requestType = request.requestType();
 		Serializable data = request.requestData();
-		try {
-			Serializable responseData = switch (requestType) {
-			case "employee/add" -> employee_add(data);
-			case "employee/remove" -> employee_remove(data);
-			case "employee/get" -> employee_get(data);
-			case "employees/get" -> employees_get(data);
-			case "department/salary/distribution" -> department_salary_distribution(data);
-			case "salary/distribution" -> salary_distribution(data);
-			case "employees/department" -> employees_department(data);
-			case "employees/salary" -> employees_salary(data);
-			case "employees/age" -> employees_age(data);
-			case "salary/update" -> salary_update(data);
-			case "department/update" -> department_update(data);
 
-			default -> new Response(ResponseCode.WRONG_TYPE, requestType + "is unsupported in the Company Protocol");
-			};
-			response = (responseData instanceof Response) ? (Response) responseData
-					: new Response(ResponseCode.OK, responseData);
+		try {
+			requestType = requestType.replace('/', '_');
+			Method method = this.getClass().getDeclaredMethod(requestType, Serializable.class);
+			Serializable responseData = (Serializable) method.invoke(this, data);
+			
+			response = new Response(ResponseCode.OK, responseData);
+		} catch (NoSuchMethodException e) {
+			response = new Response(ResponseCode.WRONG_TYPE, requestType + " is unsupported in the Company Protocol");
+		} catch (InvocationTargetException e) {
+			Throwable causeEx = e.getCause();
+			String errorMessage = causeEx instanceof ClassCastException ? "Mismatching of received data type"
+					: causeEx.getMessage();
+
+			response = new Response(ResponseCode.WRONG_DATA, errorMessage);
 		} catch (Exception e) {
 			response = new Response(ResponseCode.WRONG_DATA, e.toString());
 		}

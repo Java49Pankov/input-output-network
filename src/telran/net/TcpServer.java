@@ -12,7 +12,7 @@ public class TcpServer implements Runnable {
 	private ApplProtocol protocol;
 	private ServerSocket serverSocket;
 	AtomicInteger clientsCounter = new AtomicInteger(0);
-	int nThreads = /* Runtime.getRuntime().availableProcessors() */2;
+	int nThreads =  Runtime.getRuntime().availableProcessors();
 	ExecutorService threadPool = Executors.newFixedThreadPool(nThreads);
 	boolean isShutdown = false;
 
